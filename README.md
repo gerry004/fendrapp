@@ -34,3 +34,13 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Progressive Web App (PWA) Support
+
+This app is now a PWA! You can install it on your device from supported browsers. To test PWA features locally:
+
+1. Run `npm run build` and `npm start`.
+2. Open the app in Chrome or another PWA-compatible browser.
+3. Use the browser's install option or "Add to Home Screen" on mobile.
+
+PWA features include offline support, installability, and a web app manifest.
