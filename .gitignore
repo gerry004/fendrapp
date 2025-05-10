@@ -45,3 +45,6 @@ next-env.d.ts
 
 # Optional eslint cache
 .eslintcache
+
+/prisma/migrations
+.env

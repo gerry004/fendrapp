@@ -1,0 +1,17 @@
+// Prisma schema file
+// Run `npx prisma generate` and `npx prisma migrate dev` after editing
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql" // Change to your DB provider if needed
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String  @id
+  username     String
+  access_token String
+} 
