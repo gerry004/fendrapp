@@ -17,7 +17,7 @@ export default function Home() {
   }, [user, loading, router]);
 
   const handleFacebookLogin = async () => {
-    const res = await fetch('/api/connect_facebook');
+    const res = await fetch('/api/facebook/connect');
     if (res.ok) {
       const data = await res.json();
       if (data.oauthUrl) {

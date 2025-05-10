@@ -1,43 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/app/prismaClient';
 import { setSession, UserSession } from '@/app/lib/session';
+import { getShortLivedToken, getLongLivedToken, getUserNameAndId } from '@/app/lib/auth';
 
-const FACEBOOK_CLIENT_ID = '1377511903432243';
-const FACEBOOK_CLIENT_SECRET = '5a09e1554db473d8ab56ae5594f82697';
-const FACEBOOK_REDIRECT_URI = 'http://localhost:3000/api/facebook/callback';
-const FACEBOOK_TOKEN_URL = 'https://graph.facebook.com/v19.0/oauth/access_token';
-const BASE_URL = 'http://localhost:3000';
-
-async function getShortLivedToken(code: string): Promise<string | null> {
-  const params = new URLSearchParams({
-    client_id: FACEBOOK_CLIENT_ID,
-    redirect_uri: FACEBOOK_REDIRECT_URI,
-    client_secret: FACEBOOK_CLIENT_SECRET,
-    code,
-  });
-  const tokenRes = await fetch(`${FACEBOOK_TOKEN_URL}?${params.toString()}`);
-  const tokenData = await tokenRes.json();
-  return tokenData.access_token || null;
-}
-
-async function getLongLivedToken(shortLivedToken: string): Promise<string | null> {
-  const longLivedParams = new URLSearchParams({
-    grant_type: 'fb_exchange_token',
-    client_id: FACEBOOK_CLIENT_ID,
-    client_secret: FACEBOOK_CLIENT_SECRET,
-    fb_exchange_token: shortLivedToken,
-  });
-  const longLivedRes = await fetch(`${FACEBOOK_TOKEN_URL}?${longLivedParams.toString()}`);
-  const longLivedData = await longLivedRes.json();
-  return longLivedData.access_token || null;
-}
-
-async function getUserNameAndId(longLivedToken: string): Promise<{ name: string; id: string } | null> {
-  const userRes = await fetch(`https://graph.facebook.com/me?fields=id,name&access_token=${longLivedToken}`);
-  const userData = await userRes.json();
-  if (!userData.id || !userData.name) return null;
-  return { name: userData.name, id: userData.id };
-}
+const BASE_URL = process.env.NODE_ENV === 'production' ? process.env.BASE_URL_PRODUCTION : process.env.BASE_URL_DEVELOPMENT;
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
