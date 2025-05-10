@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 
 const FACEBOOK_CLIENT_ID = '1377511903432243';
 const FACEBOOK_REDIRECT_URI = 'http://localhost:3000/api/facebook/callback';

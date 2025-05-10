@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/app/prismaClient';
+import { setSession, UserSession } from '@/app/lib/session';
 
 const FACEBOOK_CLIENT_ID = '1377511903432243';
 const FACEBOOK_CLIENT_SECRET = '5a09e1554db473d8ab56ae5594f82697';
@@ -82,6 +83,16 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  // Redirect to dashboard after successful token exchange (absolute URL required)
-  return NextResponse.redirect(`${BASE_URL}/dashboard`);
+  // Create a redirect response
+  const response = NextResponse.redirect(`${BASE_URL}/dashboard`);
+  
+  // Create a session and set the cookie
+  const sessionData: UserSession = {
+    userId: userInfo.id,
+    name: userInfo.name,
+    accessToken: longLivedToken
+  };
+  
+  // Set the session cookie on the response
+  return setSession(response, sessionData);
 } 
