@@ -20,6 +20,7 @@
     "next": "15.1.6",
     "next-pwa": "^5.6.0",
     "ngrok": "^5.0.0-beta.2",
+    "openai": "^4.98.0",
     "react": "^19.0.0",
     "react-chartjs-2": "^5.3.0",
     "react-dom": "^19.0.0",

@@ -12,6 +12,8 @@ interface Comment {
   id: string;
   mediaId?: string;
   timestamp?: string;
+  isHarmful?: boolean;
+  analyzing?: boolean;
 }
 
 export default function Dashboard() {
@@ -75,6 +77,48 @@ export default function Dashboard() {
     }
   };
 
+  // Analyze a specific comment
+  const analyzeComment = async (commentId: string, commentText: string) => {
+    try {
+      // Update the comment's analyzing state
+      setComments(prevComments => 
+        prevComments.map(c => 
+          c.id === commentId ? { ...c, analyzing: true } : c
+        )
+      );
+      
+      const response = await fetch('/api/data/analyze', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ comment: commentText }),
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to analyze comment');
+      }
+      
+      // Update the comment with the analysis result
+      setComments(prevComments => 
+        prevComments.map(c => 
+          c.id === commentId ? { ...c, isHarmful: data.isHarmful, analyzing: false } : c
+        )
+      );
+    } catch (error) {
+      console.error('Error analyzing comment:', error);
+      
+      // Reset the analyzing state on error
+      setComments(prevComments => 
+        prevComments.map(c => 
+          c.id === commentId ? { ...c, analyzing: false } : c
+        )
+      );
+    }
+  };
+
   // Format timestamp to a readable date
   const formatDate = (timestamp?: string) => {
     if (!timestamp) return 'Unknown date';
@@ -129,9 +173,31 @@ export default function Dashboard() {
                         <span className="text-sm text-gray-500">{formatDate(comment.timestamp)}</span>
                       </div>
                       <p className="mb-2">{comment.text}</p>
-                      <div className="flex justify-between text-xs text-gray-500">
-                        <span>Media ID: {comment.mediaId || 'Unknown'}</span>
-                        <span>{comment.hidden ? 'Hidden' : 'Visible'}</span>
+                      <div className="flex justify-between items-center text-xs">
+                        <span className="text-gray-500">Media ID: {comment.mediaId || 'Unknown'}</span>
+                        <div className="flex items-center gap-2">
+                          <span className={`${comment.hidden ? 'text-red-500' : 'text-green-500'}`}>
+                            {comment.hidden ? 'Hidden' : 'Visible'}
+                          </span>
+                          
+                          {comment.isHarmful !== undefined && (
+                            <span className={`px-2 py-1 rounded ${comment.isHarmful ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}>
+                              {comment.isHarmful ? 'Harmful' : 'Safe'}
+                            </span>
+                          )}
+                          
+                          <button
+                            onClick={() => analyzeComment(comment.id, comment.text)}
+                            disabled={comment.analyzing}
+                            className={`px-3 py-1 rounded text-xs font-medium ${
+                              comment.analyzing 
+                                ? 'bg-gray-200 text-gray-500' 
+                                : 'bg-blue-500 text-white hover:bg-blue-600'
+                            }`}
+                          >
+                            {comment.analyzing ? 'Analyzing...' : 'Analyze'}
+                          </button>
+                        </div>
                       </div>
                     </li>
                   ))}
