@@ -66,12 +66,10 @@ export async function GET(request: NextRequest) {
   const redirectPath = userSettings ? '/dashboard' : '/onboard';
   const response = NextResponse.redirect(`${BASE_URL}${redirectPath}`);
   
-  // Create a session and set the cookie
+  // Create a session with only userId and accessToken
   const sessionData: UserSession = {
     userId: userInfo.id,
-    name: userInfo.name,
-    accessToken: longLivedToken,
-    settings: userSettings || undefined // Include settings if available
+    accessToken: longLivedToken
   };
   
   // Set the session cookie on the response

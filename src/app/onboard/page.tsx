@@ -3,12 +3,14 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../context/AuthContext';
+import { useUser } from '../hooks/useUser';
 import Link from 'next/link';
 
 type ModerationOption = 'AUTO_DELETE' | 'AUTO_HIDE' | 'MANUAL_REVIEW';
 
 export default function OnboardPage() {
-  const { user, loading } = useAuth();
+  const { user: sessionUser, loading: authLoading } = useAuth();
+  const { userData, loading: userDataLoading, error } = useUser();
   const [selectedOption, setSelectedOption] = useState<ModerationOption | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
@@ -16,16 +18,18 @@ export default function OnboardPage() {
   
   // Redirect to home if not logged in
   useEffect(() => {
-    if (!loading && !user) {
+    if (!authLoading && !sessionUser) {
       router.push('/');
     }
-    
-    // Set the initial selection based on user's current setting
-    if (user?.settings) {
-      setSelectedOption(user.settings as ModerationOption);
+  }, [sessionUser, authLoading, router]);
+  
+  // Set the initial selection based on user's current setting when user data loads
+  useEffect(() => {
+    if (userData?.settings) {
+      setSelectedOption(userData.settings as ModerationOption);
       setIsUpdating(true);
     }
-  }, [user, loading, router]);
+  }, [userData]);
 
   const handleSelectOption = async (option: ModerationOption) => {
     setSelectedOption(option);
@@ -52,7 +56,7 @@ export default function OnboardPage() {
     }
   };
 
-  if (loading) {
+  if (authLoading || userDataLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-xl">Loading...</div>
@@ -60,7 +64,7 @@ export default function OnboardPage() {
     );
   }
 
-  if (!user) {
+  if (!sessionUser) {
     return null;
   }
 

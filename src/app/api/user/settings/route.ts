@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSession, setSession, UserSession } from '@/app/lib/session';
+import { getSession, setSession } from '@/app/lib/session';
 import { prisma } from '@/app/prismaClient';
 
 export async function POST(request: NextRequest) {
@@ -29,17 +29,11 @@ export async function POST(request: NextRequest) {
       data: { settings },
     });
     
-    // Create a new response object
+    // Create a response object with success message
     const response = NextResponse.json({ success: true });
     
-    // Update the user session with the new settings
-    const updatedSession: UserSession = {
-      ...session,
-      settings: settings
-    };
-    
-    // Set the updated session cookie
-    return setSession(response, updatedSession);
+    // No need to update session as settings are no longer stored there
+    return response;
   } catch (error) {
     console.error('Error updating user settings:', error);
     return NextResponse.json(

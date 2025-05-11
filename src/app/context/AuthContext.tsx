@@ -3,8 +3,14 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { UserSession } from '../lib/session';
 
+// Extended user type that includes session data plus user details
+interface UserData extends UserSession {
+  name?: string;
+  settings?: 'AUTO_DELETE' | 'AUTO_HIDE' | 'MANUAL_REVIEW' | null;
+}
+
 interface AuthContextType {
-  user: UserSession | null;
+  user: UserData | null;
   loading: boolean;
   logout: () => Promise<void>;
   refreshSession: () => Promise<void>;
@@ -13,7 +19,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children, initialUser }: { children: ReactNode; initialUser?: UserSession | null }) {
-  const [user, setUser] = useState<UserSession | null>(initialUser || null);
+  const [user, setUser] = useState<UserData | null>(initialUser || null);
   const [loading, setLoading] = useState(true);
 
   // Function to load user session data
@@ -40,7 +46,30 @@ export function AuthProvider({ children, initialUser }: { children: ReactNode; i
     if (!initialUser) {
       loadUserFromSession();
     } else {
-      setLoading(false);
+      // If we have initial session data, fetch the full user data
+      const fetchUserData = async () => {
+        try {
+          const response = await fetch('/api/user');
+          if (response.ok) {
+            const { user: userData } = await response.json();
+            // Combine session and user data
+            setUser({
+              ...initialUser,
+              name: userData.username,
+              settings: userData.settings
+            });
+          } else {
+            setUser(initialUser);
+          }
+        } catch (error) {
+          console.error('Failed to fetch user data:', error);
+          setUser(initialUser);
+        } finally {
+          setLoading(false);
+        }
+      };
+      
+      fetchUserData();
     }
   }, [initialUser]);
 

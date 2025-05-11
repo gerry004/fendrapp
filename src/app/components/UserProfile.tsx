@@ -1,7 +1,7 @@
 'use client';
 
 import { useAuth } from '../context/AuthContext';
-import { useState } from 'react';
+import { useUser } from '../hooks/useUser';
 
 // Helper function to format settings into readable text
 const formatSettings = (settings?: string | null) => {
@@ -20,13 +20,14 @@ const formatSettings = (settings?: string | null) => {
 };
 
 export default function UserProfile() {
-  const { user, loading, logout } = useAuth();
-
-  if (loading) {
+  const { user: sessionUser, logout } = useAuth();
+  const { userData, loading: userDataLoading, error } = useUser();
+  
+  if (userDataLoading) {
     return <div>Loading...</div>;
   }
 
-  if (!user) {
+  if (!sessionUser || !userData) {
     return (
       <div className="p-4 rounded-md bg-gray-100">
         <p>Not logged in</p>
@@ -37,14 +38,14 @@ export default function UserProfile() {
   return (
     <div className="p-4 rounded-md bg-gray-100">
       <div className="mb-2">
-        <strong>User ID:</strong> {user.userId}
+        <strong>User ID:</strong> {userData.id}
       </div>
       <div className="mb-2">
-        <strong>Name:</strong> {user.name}
+        <strong>Name:</strong> {userData.username}
       </div>
       <div className="mb-2">
-        <strong>Comment Moderation:</strong> {formatSettings(user.settings)}
-        {(user.settings === undefined || user.settings === null) && (
+        <strong>Comment Moderation:</strong> {formatSettings(userData.settings)}
+        {(userData.settings === undefined || userData.settings === null) && (
           <a href="/onboard" className="ml-2 text-blue-600 hover:text-blue-800 text-sm">
             Configure
           </a>
