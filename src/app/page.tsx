@@ -42,11 +42,6 @@ export default function Home() {
           Hateful Comment Moderation for Instagram
         </p>
         
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
-          <h2 className="text-xl font-semibold mb-4">Authentication Status</h2>
-          <UserProfile />
-        </div>
-        
         {!user && (
           <div className="text-center">
             <button
