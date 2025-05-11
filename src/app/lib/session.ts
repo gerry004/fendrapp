@@ -1,19 +1,14 @@
 import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
 
-// Session cookie name
 const SESSION_COOKIE = 'facebook_session';
 
-// Type for user session data
 export interface UserSession {
   userId: string;
   name: string;
   accessToken: string;
 }
 
-/**
- * Set session data in a cookie
- */
 export function setSession(response: NextResponse, sessionData: UserSession): NextResponse {
   // Encrypt and serialize session data (in a real app, you'd want to encrypt this data)
   const serialized = JSON.stringify(sessionData);
@@ -31,9 +26,6 @@ export function setSession(response: NextResponse, sessionData: UserSession): Ne
   return response;
 }
 
-/**
- * Get session data from the request
- */
 export function getSession(request: NextRequest): UserSession | null {
   const cookie = request.cookies.get(SESSION_COOKIE);
   if (!cookie?.value) return null;
@@ -45,17 +37,11 @@ export function getSession(request: NextRequest): UserSession | null {
   }
 }
 
-/**
- * Clear session data
- */
 export function clearSession(response: NextResponse): NextResponse {
   response.cookies.delete(SESSION_COOKIE);
   return response;
 }
 
-/**
- * Get session data from the server component
- */
 export function getServerSession(): UserSession | null {
   const cookieStore = cookies();
   const sessionCookie = cookieStore.get(SESSION_COOKIE);
