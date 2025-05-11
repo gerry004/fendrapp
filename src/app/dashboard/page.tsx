@@ -14,17 +14,10 @@ interface Comment {
   timestamp?: string;
 }
 
-interface Page {
-  id: string;
-  name: string;
-  instagram_business_account_id: string | null;
-}
-
 export default function Dashboard() {
   const { user, loading } = useAuth();
   const router = useRouter();
   const [comments, setComments] = useState<Comment[]>([]);
-  const [pages, setPages] = useState<Page[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
@@ -55,8 +48,7 @@ export default function Dashboard() {
       }
       
       setComments(data.comments || []);
-      setPages(data.pages || []);
-      
+
     } catch (error) {
       console.error('Error fetching comments:', error);
       setError(error instanceof Error ? error.message : 'An unknown error occurred');

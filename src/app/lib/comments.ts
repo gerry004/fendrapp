@@ -10,32 +10,6 @@ interface FacebookPage {
   tasks: string[];
 }
 
-interface PagesResponse {
-  data: FacebookPage[];
-  paging: {
-    cursors: {
-      before: string;
-      after: string;
-    }
-  };
-}
-
-async function getUserPages(accessToken: string): Promise<FacebookPage[] | null> {
-  try {
-    const pagesRes = await fetch(`https://graph.facebook.com/me/accounts?access_token=${accessToken}`);
-    const pagesData = await pagesRes.json() as PagesResponse;
-    
-    if (!pagesData.data || !Array.isArray(pagesData.data)) {
-      return null;
-    }
-    
-    return pagesData.data;
-  } catch (error) {
-    console.error('Error fetching user pages:', error);
-    return null;
-  }
-}
-
 interface InstagramBusinessAccount {
   id: string;
 }
@@ -52,33 +26,6 @@ interface PagesWithInstagramResponse {
       after: string;
     }
   };
-}
-
-/**
- * Fetches all Instagram business account IDs for a user in one request
- * @param accessToken Facebook access token
- * @returns Array of Instagram business account IDs
- */
-async function getInstagramBusinessAccountIds(accessToken: string): Promise<string[]> {
-  try {
-    const response = await fetch(
-      `https://graph.facebook.com/me/accounts?fields=id,name,instagram_business_account&access_token=${accessToken}`
-    );
-    
-    const data = await response.json() as PagesWithInstagramResponse;
-    
-    if (!data.data || !Array.isArray(data.data)) {
-      return [];
-    }
-    
-    // Filter out pages without Instagram accounts and extract IDs
-    return data.data
-      .filter(page => page.instagram_business_account && page.instagram_business_account.id)
-      .map(page => page.instagram_business_account!.id);
-  } catch (error) {
-    console.error('Error fetching Instagram business account IDs:', error);
-    return [];
-  }
 }
 
 interface Comment {
@@ -106,6 +53,28 @@ interface MediaResponse {
       after: string;
     };
   };
+}
+
+async function getInstagramBusinessAccountIds(accessToken: string): Promise<string[]> {
+  try {
+    const response = await fetch(
+      `https://graph.facebook.com/me/accounts?fields=id,name,instagram_business_account&access_token=${accessToken}`
+    );
+    
+    const data = await response.json() as PagesWithInstagramResponse;
+    
+    if (!data.data || !Array.isArray(data.data)) {
+      return [];
+    }
+    
+    // Filter out pages without Instagram accounts and extract IDs
+    return data.data
+      .filter(page => page.instagram_business_account && page.instagram_business_account.id)
+      .map(page => page.instagram_business_account!.id);
+  } catch (error) {
+    console.error('Error fetching Instagram business account IDs:', error);
+    return [];
+  }
 }
 
 async function getAllComments(
@@ -147,4 +116,4 @@ async function getAllComments(
 }
 
 // Export all functions and types
-export { getUserPages, getInstagramBusinessAccountIds, getAllComments };
+export { getInstagramBusinessAccountIds, getAllComments };
