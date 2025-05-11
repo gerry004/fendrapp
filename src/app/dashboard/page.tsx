@@ -81,8 +81,17 @@ export default function Dashboard() {
         <UserProfile />
       </div>
       
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-semibold">Instagram Comments</h2>
+        <a
+          href="/onboard"
+          className="text-sm text-blue-600 hover:text-blue-800"
+        >
+          Change moderation settings
+        </a>
+      </div>
+
       <div className="bg-white p-6 rounded-lg shadow">
-        <h2 className="text-xl font-semibold mb-4">Instagram Comments</h2>
         {isLoading && <p>Loading comments...</p>}
         {error && <p className="text-red-500">{error}</p>}
         {!isLoading && !error && (

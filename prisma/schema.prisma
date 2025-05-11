@@ -10,8 +10,15 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum CommentModeration {
+  AUTO_HIDE
+  AUTO_DELETE
+  MANUAL_REVIEW
+}
+
 model User {
-  id           String  @id
+  id           String             @id
   username     String
   access_token String
+  settings     CommentModeration?
 } 

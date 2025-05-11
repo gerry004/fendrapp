@@ -1,9 +1,38 @@
 'use client';
 
 import { useAuth } from '../context/AuthContext';
+import { useState } from 'react';
+
+// Helper function to format settings into readable text
+const formatSettings = (settings?: string | null) => {
+  if (settings === undefined || settings === null) return 'Not configured';
+  
+  switch (settings) {
+    case 'AUTO_DELETE':
+      return 'Auto delete hateful comments';
+    case 'AUTO_HIDE':
+      return 'Auto hide abusive comments';
+    case 'MANUAL_REVIEW':
+      return 'Manual review of comments';
+    default:
+      return 'Not configured';
+  }
+};
 
 export default function UserProfile() {
-  const { user, loading, logout } = useAuth();
+  const { user, loading, logout, refreshSession } = useAuth();
+  const [refreshing, setRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await refreshSession();
+    } catch (error) {
+      console.error('Error refreshing session:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   if (loading) {
     return <div>Loading...</div>;
@@ -24,6 +53,21 @@ export default function UserProfile() {
       </div>
       <div className="mb-2">
         <strong>Name:</strong> {user.name}
+      </div>
+      <div className="mb-2">
+        <strong>Comment Moderation:</strong> {formatSettings(user.settings)}
+        {(user.settings === undefined || user.settings === null) && (
+          <a href="/onboard" className="ml-2 text-blue-600 hover:text-blue-800 text-sm">
+            Configure
+          </a>
+        )}
+        <button 
+          onClick={handleRefresh}
+          disabled={refreshing}
+          className="ml-2 text-xs text-gray-500 hover:text-gray-700"
+        >
+          {refreshing ? 'Refreshing...' : '↻ Refresh'}
+        </button>
       </div>
       <button
         onClick={logout}

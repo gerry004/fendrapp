@@ -7,6 +7,7 @@ export interface UserSession {
   userId: string;
   name: string;
   accessToken: string;
+  settings?: 'AUTO_DELETE' | 'AUTO_HIDE' | 'MANUAL_REVIEW';
 }
 
 export function setSession(response: NextResponse, sessionData: UserSession): NextResponse {

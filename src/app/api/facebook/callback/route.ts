@@ -3,6 +3,14 @@ import { prisma } from '@/app/prismaClient';
 import { setSession, UserSession } from '@/app/lib/session';
 import { getShortLivedToken, getLongLivedToken, getUserNameAndId } from '@/app/lib/auth';
 
+// Add CommentModeration type to match Prisma schema
+type UserWithSettings = {
+  id: string;
+  username: string;
+  access_token: string;
+  settings?: 'AUTO_DELETE' | 'AUTO_HIDE' | 'MANUAL_REVIEW' | null;
+};
+
 const BASE_URL = process.env.NODE_ENV === 'production' ? process.env.BASE_URL_PRODUCTION : process.env.BASE_URL_DEVELOPMENT;
 
 export async function GET(request: NextRequest) {
@@ -36,27 +44,38 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Failed to retrieve Facebook username' }, { status: 500 });
   }
 
-  // Upsert user in the database (now split into find, update, or create)
-  const existingUser = await prisma.user.findUnique({ where: { id: userInfo.id } });
+  // Check if user exists
+  const existingUser = await prisma.user.findUnique({ where: { id: userInfo.id } }) as UserWithSettings | null;
+  let isNewUser = false;
+  let userSettings = null;
+  
   if (existingUser) {
+    // Update existing user
     await prisma.user.update({
       where: { id: userInfo.id },
       data: { access_token: longLivedToken },
     });
+    userSettings = existingUser.settings;
   } else {
+    // Create new user
     await prisma.user.create({
       data: { id: userInfo.id, username: userInfo.name, access_token: longLivedToken },
     });
+    isNewUser = true;
   }
 
-  // Create a redirect response
-  const response = NextResponse.redirect(`${BASE_URL}/dashboard`);
+  // Create a redirect response - send to onboard for new users or users without settings
+  // Otherwise send to dashboard
+  const shouldShowOnboarding = isNewUser || !userSettings;
+  const redirectPath = shouldShowOnboarding ? '/onboard' : '/dashboard';
+  const response = NextResponse.redirect(`${BASE_URL}${redirectPath}`);
   
   // Create a session and set the cookie
   const sessionData: UserSession = {
     userId: userInfo.id,
     name: userInfo.name,
-    accessToken: longLivedToken
+    accessToken: longLivedToken,
+    settings: userSettings || undefined // Include settings if available
   };
   
   // Set the session cookie on the response
