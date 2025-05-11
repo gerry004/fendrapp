@@ -8,7 +8,7 @@ import Link from 'next/link';
 type ModerationOption = 'AUTO_DELETE' | 'AUTO_HIDE' | 'MANUAL_REVIEW';
 
 export default function OnboardPage() {
-  const { user, loading, refreshSession } = useAuth();
+  const { user, loading } = useAuth();
   const [selectedOption, setSelectedOption] = useState<ModerationOption | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
@@ -44,9 +44,6 @@ export default function OnboardPage() {
         throw new Error('Failed to save settings');
       }
       
-      // Refresh session to get updated settings
-      await refreshSession();
-      
       // Redirect to dashboard after saving
       router.push('/dashboard');
     } catch (error) {
@@ -64,7 +61,7 @@ export default function OnboardPage() {
   }
 
   if (!user) {
-    return null; // Will redirect in the useEffect
+    return null;
   }
 
   return (

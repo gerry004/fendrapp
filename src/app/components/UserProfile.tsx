@@ -20,19 +20,7 @@ const formatSettings = (settings?: string | null) => {
 };
 
 export default function UserProfile() {
-  const { user, loading, logout, refreshSession } = useAuth();
-  const [refreshing, setRefreshing] = useState(false);
-
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    try {
-      await refreshSession();
-    } catch (error) {
-      console.error('Error refreshing session:', error);
-    } finally {
-      setRefreshing(false);
-    }
-  };
+  const { user, loading, logout } = useAuth();
 
   if (loading) {
     return <div>Loading...</div>;
@@ -61,13 +49,6 @@ export default function UserProfile() {
             Configure
           </a>
         )}
-        <button 
-          onClick={handleRefresh}
-          disabled={refreshing}
-          className="ml-2 text-xs text-gray-500 hover:text-gray-700"
-        >
-          {refreshing ? 'Refreshing...' : '↻ Refresh'}
-        </button>
       </div>
       <button
         onClick={logout}

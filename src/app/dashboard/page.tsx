@@ -28,6 +28,24 @@ export default function Dashboard() {
     }
   }, [user, loading, router]);
 
+  // Add session refresh on dashboard load
+  useEffect(() => {
+    const refreshSessionData = async () => {
+      try {
+        const response = await fetch('/api/auth/session');
+        if (!response.ok) {
+          console.error('Failed to refresh session');
+        }
+      } catch (error) {
+        console.error('Error refreshing session:', error);
+      }
+    };
+    
+    if (user) {
+      refreshSessionData();
+    }
+  }, [user]);
+
   // Fetch comments when the page loads
   useEffect(() => {
     if (user) {

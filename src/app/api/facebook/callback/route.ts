@@ -46,7 +46,6 @@ export async function GET(request: NextRequest) {
 
   // Check if user exists
   const existingUser = await prisma.user.findUnique({ where: { id: userInfo.id } }) as UserWithSettings | null;
-  let isNewUser = false;
   let userSettings = null;
   
   if (existingUser) {
@@ -61,13 +60,10 @@ export async function GET(request: NextRequest) {
     await prisma.user.create({
       data: { id: userInfo.id, username: userInfo.name, access_token: longLivedToken },
     });
-    isNewUser = true;
   }
 
-  // Create a redirect response - send to onboard for new users or users without settings
-  // Otherwise send to dashboard
-  const shouldShowOnboarding = isNewUser || !userSettings;
-  const redirectPath = shouldShowOnboarding ? '/onboard' : '/dashboard';
+  // Redirect to onboard if no settings, otherwise to dashboard
+  const redirectPath = userSettings ? '/dashboard' : '/onboard';
   const response = NextResponse.redirect(`${BASE_URL}${redirectPath}`);
   
   // Create a session and set the cookie
