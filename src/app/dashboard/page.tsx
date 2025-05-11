@@ -57,7 +57,6 @@ export default function Dashboard() {
       setComments(data.comments || []);
       setPages(data.pages || []);
       
-      console.log('Comments data:', data);
     } catch (error) {
       console.error('Error fetching comments:', error);
       setError(error instanceof Error ? error.message : 'An unknown error occurred');
@@ -88,32 +87,6 @@ export default function Dashboard() {
     <div className="container mx-auto p-6">
       <div className="mb-6">
         <UserProfile />
-      </div>
-      
-      <div className="bg-white p-6 rounded-lg shadow mb-6">
-        <h2 className="text-xl font-semibold mb-4">Connected Pages</h2>
-        {isLoading && <p>Loading pages...</p>}
-        {error && <p className="text-red-500">{error}</p>}
-        {!isLoading && !error && (
-          <div>
-            {pages.length === 0 ? (
-              <p>No Facebook pages with Instagram accounts found.</p>
-            ) : (
-              <ul className="space-y-2">
-                {pages.map(page => (
-                  <li key={page.id} className="p-3 bg-gray-50 rounded">
-                    <p className="font-medium">{page.name}</p>
-                    <p className="text-sm text-gray-600">
-                      {page.instagram_business_account_id 
-                        ? `Instagram ID: ${page.instagram_business_account_id}`
-                        : 'No Instagram account connected'}
-                    </p>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        )}
       </div>
       
       <div className="bg-white p-6 rounded-lg shadow">

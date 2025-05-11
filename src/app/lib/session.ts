@@ -42,8 +42,8 @@ export function clearSession(response: NextResponse): NextResponse {
   return response;
 }
 
-export function getServerSession(): UserSession | null {
-  const cookieStore = cookies();
+export async function getServerSession(): Promise<UserSession | null> {
+  const cookieStore = await cookies();
   const sessionCookie = cookieStore.get(SESSION_COOKIE);
   
   if (!sessionCookie?.value) return null;

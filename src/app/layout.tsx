@@ -8,13 +8,13 @@ export const metadata: Metadata = {
   description: "Fendr App - Hateful Comment Moderation",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   // Get the initial session server-side
-  const session = getServerSession();
+  const session = await getServerSession();
   
   return (
     <html lang="en">

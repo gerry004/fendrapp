@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/app/lib/session';
 import { 
-  getUserPages, 
-  getInstagramBusinessAccountId, 
+  getUserPages,
   getInstagramBusinessAccountIds,
   getAllComments
 } from '@/app/lib/comments';
@@ -39,32 +38,8 @@ export async function GET(request: NextRequest) {
     // Also get pages info for reference
     const pages = await getUserPages(session.accessToken);
     
-    if (!pages || pages.length === 0) {
-      return NextResponse.json({ 
-        pages: [], 
-        comments: allComments,
-        message: "Comments found but no page information available" 
-      }, { status: 200 });
-    }
-    
-    // For each page, get Instagram business account ID for the response
-    const pagesWithInstagram = await Promise.all(
-      pages.map(async (page) => {
-        const instagramId = await getInstagramBusinessAccountId(
-          page.id,
-          page.access_token
-        );
-        
-        return {
-          id: page.id,
-          name: page.name,
-          instagram_business_account_id: instagramId
-        };
-      })
-    );
-    
-    return NextResponse.json({ 
-      pages: pagesWithInstagram, 
+    return NextResponse.json({
+      pages: pages,
       comments: allComments,
       totalComments: allComments.length
     }, { status: 200 });

@@ -36,60 +36,6 @@ async function getUserPages(accessToken: string): Promise<FacebookPage[] | null>
   }
 }
 
-interface InstagramBusinessAccountResponse {
-  instagram_business_account?: {
-    id: string;
-  };
-  id: string;
-}
-
-async function getInstagramBusinessAccountId(
-  pageId: string,
-  accessToken: string
-): Promise<string | null> {
-  try {
-    const response = await fetch(
-      `https://graph.facebook.com/${pageId}?fields=instagram_business_account&access_token=${accessToken}`
-    );
-    
-    const data = await response.json() as InstagramBusinessAccountResponse;
-    
-    if (!data.instagram_business_account || !data.instagram_business_account.id) {
-      return null;
-    }
-    
-    return data.instagram_business_account.id;
-  } catch (error) {
-    console.error('Error fetching Instagram business account:', error);
-    return null;
-  }
-}
-
-// getInstagramBusinessAccountIds FUNCTION - should return all the instagram business account ids for a user in one array
-// me/accounts?fields=id,name,instagram_business_account
-
-// {
-//   "data": [
-//     {
-//       "id": "689359750920006",
-//       "name": "Test Fendrapp 2"
-//     },
-//     {
-//       "id": "630361413494206",
-//       "name": "Test fendrapp",
-//       "instagram_business_account": {
-//         "id": "17841473880673594"
-//       }
-//     }
-//   ],
-//   "paging": {
-//     "cursors": {
-//       "before": "QVFIUmhtN0VtZAjlYMVVNNmlvdTJTNnl4OWNBLXJRTXJSNjlhcEN5RENiMEVQaXZAsSVBzR2NEMUF5bS1NY3F2UnAzQ3JvZA3kzaEFpaDIwRDFCcmR5aUJkdnJ3",
-//       "after": "QVFIUlpJdXo0eFNMaG5tZA0puLXBfNjNiRmJacHNxOGw3Q2wzY1N5ZATF0bzF0d1NZAV1R1NW45UVA2bENXcVVXMXRUX2hqbUlaQ096aW9nTWpJUFkxQ1JhcmNn"
-//     }
-//   }
-// }
-
 interface InstagramBusinessAccount {
   id: string;
 }
@@ -135,40 +81,6 @@ async function getInstagramBusinessAccountIds(accessToken: string): Promise<stri
   }
 }
 
-// getAllComments - should return all the comments in a single array
-
-// /{instagram_business_account_id}/media?fields=id,timestamp,comments{text,username,hidden}
-// {
-//   "data": [
-//     {
-//       "id": "18055492187275100",
-//       "timestamp": "2025-04-07T20:14:17+0000",
-//       "comments": {
-//         "data": [
-//           {
-//             "text": "Ugly food looks awful",
-//             "username": "fendrapptest",
-//             "hidden": false,
-//             "id": "18002962316765127"
-//           },
-//           {
-//             "text": "This is the stupidest thing I've ever seen",
-//             "username": "fendrapptest",
-//             "hidden": false,
-//             "id": "18040771298199778"
-//           },
-//           {
-//             "text": "Maybe I need to comment using someone else's account",
-//             "username": "gerry.004",
-//             "hidden": false,
-//             "id": "17930483130040400"
-//           }
-//         ]
-//       }
-//     }
-//   ]
-// }
-
 interface Comment {
   text: string;
   username: string;
@@ -196,12 +108,6 @@ interface MediaResponse {
   };
 }
 
-/**
- * Fetches all comments from an Instagram business account
- * @param instagramBusinessAccountId Instagram business account ID
- * @param accessToken Facebook access token
- * @returns Array of comments from all media posts
- */
 async function getAllComments(
   instagramBusinessAccountId: string,
   accessToken: string
@@ -241,5 +147,4 @@ async function getAllComments(
 }
 
 // Export all functions and types
-export { getUserPages, getInstagramBusinessAccountId, getInstagramBusinessAccountIds, getAllComments };
-export type { FacebookPage, Comment };
+export { getUserPages, getInstagramBusinessAccountIds, getAllComments };
