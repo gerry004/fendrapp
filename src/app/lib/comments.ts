@@ -195,6 +195,96 @@ async function analyzeCommentText(text: string): Promise<boolean> {
   }
 }
 
+async function hideComment(commentId: string, accessToken: string): Promise<boolean> {
+  try {
+    const response = await fetch(
+      `https://graph.facebook.com/${commentId}?hide=true&access_token=${accessToken}`,
+      {
+        method: 'POST',
+      }
+    );
+    
+    const data = await response.json();
+    
+    // Log the response for debugging
+    console.log('Hide comment API response:', JSON.stringify(data));
+    
+    if (!response.ok) {
+      throw new Error(data.error?.message || 'Failed to hide comment');
+    }
+    
+    // Facebook Graph API typically returns { success: true } OR the updated object itself
+    if (data.success === true || data.id === commentId) {
+      return true;
+    }
+    
+    return false;
+  } catch (error) {
+    console.error('Error hiding comment:', error);
+    throw error;
+  }
+}
+
+async function unhideComment(commentId: string, accessToken: string): Promise<boolean> {
+  try {
+    const response = await fetch(
+      `https://graph.facebook.com/${commentId}?hide=false&access_token=${accessToken}`,
+      {
+        method: 'POST',
+      }
+    );
+    
+    const data = await response.json();
+    
+    // Log the response for debugging
+    console.log('Unhide comment API response:', JSON.stringify(data));
+    
+    if (!response.ok) {
+      throw new Error(data.error?.message || 'Failed to unhide comment');
+    }
+    
+    // Facebook Graph API typically returns { success: true } OR the updated object itself
+    if (data.success === true || data.id === commentId) {
+      return true;
+    }
+    
+    return false;
+  } catch (error) {
+    console.error('Error unhiding comment:', error);
+    throw error;
+  }
+}
+
+async function deleteComment(commentId: string, accessToken: string): Promise<boolean> {
+  try {
+    const response = await fetch(
+      `https://graph.facebook.com/${commentId}?access_token=${accessToken}`,
+      {
+        method: 'DELETE',
+      }
+    );
+    
+    const data = await response.json();
+    
+    // Log the response for debugging
+    console.log('Delete comment API response:', JSON.stringify(data));
+    
+    if (!response.ok) {
+      throw new Error(data.error?.message || 'Failed to delete comment');
+    }
+    
+    // Facebook Graph API typically returns { success: true } OR a confirmation object
+    if (data.success === true || data.id === commentId || data.deleted === true) {
+      return true;
+    }
+    
+    return false;
+  } catch (error) {
+    console.error('Error deleting comment:', error);
+    throw error;
+  }
+}
+
 // Export all functions and types
 export { 
   getInstagramBusinessAccountIds, 
@@ -202,5 +292,8 @@ export {
   saveAnalyzedComment, 
   getAnalyzedComments,
   analyzeCommentText,
+  hideComment,
+  unhideComment,
+  deleteComment,
   type Comment 
 };

@@ -16,6 +16,7 @@ interface Comment {
   timestamp?: string;
   isHarmful?: boolean;
   analyzing?: boolean;
+  deleted?: boolean;
 }
 
 type FilterTabType = 'positive' | 'negative';
@@ -100,6 +101,25 @@ export default function Dashboard() {
     setActiveTab(tab);
   };
 
+  // Handle comment status changes
+  const handleCommentStatusChange = (commentId: string, status: { hidden?: boolean; deleted?: boolean }) => {
+    setComments(prev => 
+      prev.map(comment => {
+        if (comment.id === commentId) {
+          // For deleted comments, we'll remove them from the list
+          if (status.deleted) {
+            return { ...comment, deleted: true };
+          }
+          // For hidden status changes, update the hidden property
+          if (status.hidden !== undefined) {
+            return { ...comment, hidden: status.hidden };
+          }
+        }
+        return comment;
+      }).filter(comment => !comment.deleted) // Remove deleted comments from the list
+    );
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-purple-50">
@@ -152,10 +172,13 @@ export default function Dashboard() {
                 {filteredComments.map(comment => (
                   <CommentItem 
                     key={comment.id}
+                    id={comment.id}
                     username={comment.username}
                     text={comment.text}
                     isHarmful={comment.isHarmful}
                     hidden={comment.hidden}
+                    accessToken={user?.accessToken || ''}
+                    onStatusChange={handleCommentStatusChange}
                   />
                 ))}
               </div>
