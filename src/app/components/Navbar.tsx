@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useUser } from '../hooks/useUser';
+import SettingsDropdown from './SettingsDropdown';
 
 export default function Navbar() {
   const { logout } = useAuth();
@@ -34,10 +35,13 @@ export default function Navbar() {
           FENDR
         </div>
 
-        {/* Desktop user info and logout */}
+        {/* Desktop user info, settings, and logout */}
         <div className="hidden md:flex items-center space-x-4">
           {userData && (
-            <span className="text-white font-medium">{userData.username}</span>
+            <>
+              <span className="text-white font-medium">{userData.username}</span>
+              <SettingsDropdown />
+            </>
           )}
           <button
             onClick={logout}
@@ -65,10 +69,13 @@ export default function Navbar() {
             {/* Sidebar Content - Push user info and logout to bottom */}
             <div className="flex-grow"></div>
             
-            {/* User info and logout at bottom */}
+            {/* User info, settings, and logout at bottom */}
             <div className="mt-auto">
               {userData && (
-                <div className="text-white font-medium mb-3">{userData.username}</div>
+                <>
+                  <div className="text-white font-medium mb-3">{userData.username}</div>
+                  <SettingsDropdown isMobile={true} />
+                </>
               )}
               <button
                 onClick={logout}
