@@ -213,9 +213,6 @@ async function hideComment(commentId: string, accessToken: string): Promise<bool
     
     const data = await response.json();
     
-    // Log the response for debugging
-    console.log('Hide comment API response:', JSON.stringify(data));
-    
     if (!response.ok) {
       throw new Error(data.error?.message || 'Failed to hide comment');
     }
@@ -243,9 +240,6 @@ async function unhideComment(commentId: string, accessToken: string): Promise<bo
     
     const data = await response.json();
     
-    // Log the response for debugging
-    console.log('Unhide comment API response:', JSON.stringify(data));
-    
     if (!response.ok) {
       throw new Error(data.error?.message || 'Failed to unhide comment');
     }
@@ -272,9 +266,6 @@ async function deleteComment(commentId: string, accessToken: string): Promise<bo
     );
     
     const data = await response.json();
-    
-    // Log the response for debugging
-    console.log('Delete comment API response:', JSON.stringify(data));
     
     if (!response.ok) {
       throw new Error(data.error?.message || 'Failed to delete comment');

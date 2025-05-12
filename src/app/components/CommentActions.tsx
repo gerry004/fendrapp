@@ -36,8 +36,6 @@ export default function CommentActions({
       
       const data = await response.json();
       
-      console.log(`${action} comment response:`, data);
-      
       if (!response.ok) {
         throw new Error(data.error || `Failed to ${action} comment`);
       }
@@ -71,8 +69,6 @@ export default function CommentActions({
       });
       
       const data = await response.json();
-      
-      console.log('delete comment response:', data);
       
       if (!response.ok) {
         throw new Error(data.error || 'Failed to delete comment');
