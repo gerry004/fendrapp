@@ -17,8 +17,23 @@ enum CommentModeration {
 }
 
 model User {
-  id           String             @id
-  username     String
-  access_token String
-  settings     CommentModeration?
+  id                String             @id
+  username          String
+  access_token      String
+  settings          CommentModeration?
+  analyzedComments  AnalyzedComment[]
+}
+
+model AnalyzedComment {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  commentId   String   // Instagram comment ID
+  mediaId     String?  // Parent media ID
+  text        String
+  username    String
+  isHarmful   Boolean
+  timestamp   DateTime @default(now())
+  
+  @@unique([userId, commentId])
 } 

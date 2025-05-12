@@ -35,6 +35,8 @@ interface Comment {
   id: string;
   mediaId?: string;  // Add the parent media ID for reference
   timestamp?: string; // Add the media timestamp for reference
+  isHarmful?: boolean; // Add analysis result
+  analyzing?: boolean; // Flag for loading state
 }
 
 interface MediaItem {
@@ -54,6 +56,8 @@ interface MediaResponse {
     };
   };
 }
+
+import { prisma } from '../prismaClient';
 
 async function getInstagramBusinessAccountIds(accessToken: string): Promise<string[]> {
   try {
@@ -115,5 +119,88 @@ async function getAllComments(
   }
 }
 
+// Save analyzed comment to database
+async function saveAnalyzedComment(userId: string, comment: Comment, isHarmful: boolean): Promise<void> {
+  try {
+    await prisma.analyzedComment.upsert({
+      where: {
+        userId_commentId: {
+          userId,
+          commentId: comment.id,
+        },
+      },
+      update: {
+        isHarmful,
+      },
+      create: {
+        userId,
+        commentId: comment.id,
+        mediaId: comment.mediaId,
+        text: comment.text,
+        username: comment.username,
+        isHarmful,
+      },
+    });
+  } catch (error) {
+    console.error('Error saving analyzed comment:', error);
+    throw error;
+  }
+}
+
+// Get previously analyzed comments for a user
+async function getAnalyzedComments(userId: string): Promise<Record<string, boolean>> {
+  try {
+    const analyzedComments = await prisma.analyzedComment.findMany({
+      where: {
+        userId,
+      },
+      select: {
+        commentId: true,
+        isHarmful: true,
+      },
+    });
+    
+    // Create a map of comment IDs to their harmful status for quick lookup
+    return analyzedComments.reduce((acc: Record<string, boolean>, comment: { commentId: string; isHarmful: boolean }) => {
+      acc[comment.commentId] = comment.isHarmful;
+      return acc;
+    }, {} as Record<string, boolean>);
+  } catch (error) {
+    console.error('Error retrieving analyzed comments:', error);
+    return {};
+  }
+}
+
+// Analyze a comment's text and determine if it's harmful
+async function analyzeCommentText(text: string): Promise<boolean> {
+  try {
+    const response = await fetch('/api/data/analyze', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ comment: text }),
+    });
+    
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to analyze comment');
+    }
+    
+    return data.isHarmful;
+  } catch (error) {
+    console.error('Error analyzing comment text:', error);
+    throw error;
+  }
+}
+
 // Export all functions and types
-export { getInstagramBusinessAccountIds, getAllComments };
+export { 
+  getInstagramBusinessAccountIds, 
+  getAllComments, 
+  saveAnalyzedComment, 
+  getAnalyzedComments,
+  analyzeCommentText,
+  type Comment 
+};
