@@ -54,15 +54,7 @@ export default function CommentItem({
       return { label: 'Hidden', className: 'bg-yellow-100 text-yellow-600' };
     }
     
-    if (isHarmful === true) {
-      return { label: 'Harmful', className: 'bg-orange-100 text-orange-600' };
-    }
-    
-    if (isHarmful === false) {
-      return { label: 'Safe', className: 'bg-green-100 text-green-600' };
-    }
-    
-    return { label: 'Pending', className: 'bg-gray-100 text-gray-600' };
+    return { label: 'Visible', className: 'bg-green-100 text-green-600' };
   };
 
   const statusInfo = getStatusInfo();
