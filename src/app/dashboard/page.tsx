@@ -1,6 +1,8 @@
 'use client';
 
-import UserProfile from '../components/UserProfile';
+import Navbar from '../components/Navbar';
+import StatusCard from '../components/StatusCard';
+import CommentItem from '../components/CommentItem';
 import { useAuth } from '../context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -16,15 +18,16 @@ interface Comment {
   analyzing?: boolean;
 }
 
-type TabType = 'all' | 'safe' | 'harmful';
+type FilterTabType = 'positive' | 'negative';
 
 export default function Dashboard() {
   const { user, loading } = useAuth();
   const router = useRouter();
   const [comments, setComments] = useState<Comment[]>([]);
-  const [activeTab, setActiveTab] = useState<TabType>('all');
+  const [activeTab, setActiveTab] = useState<FilterTabType>('positive');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [lastAnalyzedAt, setLastAnalyzedAt] = useState<string | null>(null);
   
   // Redirect to home if not logged in
   useEffect(() => {
@@ -62,6 +65,8 @@ export default function Dashboard() {
     try {
       setIsLoading(true);
       setError(null);
+      // Clear the timestamp while loading to show loading state
+      setLastAnalyzedAt(null);
       
       const response = await fetch('/api/data');
       const data = await response.json();
@@ -71,6 +76,9 @@ export default function Dashboard() {
       }
       
       setComments(data.comments || []);
+      
+      // Only set the timestamp after data is successfully fetched
+      setLastAnalyzedAt(new Date().toISOString());
 
     } catch (error) {
       console.error('Error fetching comments:', error);
@@ -82,27 +90,20 @@ export default function Dashboard() {
 
   // Filter comments based on active tab
   const filteredComments = comments.filter(comment => {
-    if (activeTab === 'all') return true;
-    if (activeTab === 'safe') return comment.isHarmful === false;
-    if (activeTab === 'harmful') return comment.isHarmful === true;
+    if (activeTab === 'positive') return comment.isHarmful === false;
+    if (activeTab === 'negative') return comment.isHarmful === true;
     return true;
   });
 
-  // Stats for the tabs
-  const safeCount = comments.filter(c => c.isHarmful === false).length;
-  const harmfulCount = comments.filter(c => c.isHarmful === true).length;
-  const pendingCount = comments.filter(c => c.isHarmful === undefined).length;
-
-  // Format timestamp to a readable date
-  const formatDate = (timestamp?: string) => {
-    if (!timestamp) return 'Unknown date';
-    return new Date(timestamp).toLocaleString();
+  // Handle tab change from StatusCard
+  const handleTabChange = (tab: FilterTabType) => {
+    setActiveTab(tab);
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-xl">Loading...</div>
+      <div className="flex items-center justify-center min-h-screen bg-purple-50">
+        <div className="text-xl text-purple-700">Loading...</div>
       </div>
     );
   }
@@ -111,105 +112,55 @@ export default function Dashboard() {
     return null; // Will redirect in the useEffect
   }
 
+  // Clean, modern UI layout
   return (
-    <div className="container mx-auto p-6">
-      <div className="mb-6">
-        <UserProfile />
-      </div>
+    <div className="flex flex-col min-h-screen bg-purple-50/30">
+      <Navbar />
       
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold">Instagram Comments</h2>
-        <a
-          href="/onboard"
-          className="text-sm text-blue-600 hover:text-blue-800"
-        >
-          Change moderation settings
-        </a>
-      </div>
+      <div className="container mx-auto px-4 py-6 flex-grow max-w-3xl">
+        <StatusCard 
+          lastAnalyzedAt={lastAnalyzedAt} 
+          activeTab={activeTab}
+          onTabChange={handleTabChange}
+        />
 
-      <div className="bg-white p-6 rounded-lg shadow">
-        {isLoading && <p>Loading comments...</p>}
-        {error && <p className="text-red-500">{error}</p>}
+        {isLoading && (
+          <div className="flex justify-center py-8">
+            <div className="flex items-center space-x-2">
+              <div className="w-3 h-3 bg-purple-500 rounded-full animate-pulse"></div>
+              <div className="w-3 h-3 bg-purple-400 rounded-full animate-pulse delay-150"></div>
+              <div className="w-3 h-3 bg-purple-300 rounded-full animate-pulse delay-300"></div>
+              <span className="text-purple-700 ml-2">Loading comments...</span>
+            </div>
+          </div>
+        )}
+        
+        {error && (
+          <div className="bg-red-50 p-4 rounded-xl mb-4 shadow-sm border border-red-100">
+            <p className="text-red-600">{error}</p>
+          </div>
+        )}
+        
         {!isLoading && !error && (
-          <div>
-            {comments.length === 0 ? (
-              <p>No comments found.</p>
+          <>
+            {filteredComments.length === 0 ? (
+              <div className="bg-white p-6 rounded-xl shadow-sm text-center border border-gray-100">
+                <p className="text-gray-600">No {activeTab === 'positive' ? 'safe' : 'harmful'} comments found.</p>
+              </div>
             ) : (
-              <div>
-                <p className="mb-4 text-sm text-gray-600">
-                  Total: {comments.length} comments • Safe: {safeCount} • Harmful: {harmfulCount} 
-                  {pendingCount > 0 && ` • Pending Analysis: ${pendingCount}`}
-                </p>
-                
-                {/* Tabs */}
-                <div className="border-b border-gray-200 mb-4">
-                  <nav className="flex -mb-px">
-                    <button
-                      onClick={() => setActiveTab('all')}
-                      className={`mr-8 py-2 px-1 ${
-                        activeTab === 'all'
-                          ? 'border-b-2 border-blue-500 text-blue-600'
-                          : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                      }`}
-                    >
-                      All ({comments.length})
-                    </button>
-                    <button
-                      onClick={() => setActiveTab('safe')}
-                      className={`mr-8 py-2 px-1 ${
-                        activeTab === 'safe'
-                          ? 'border-b-2 border-green-500 text-green-600'
-                          : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                      }`}
-                    >
-                      Safe ({safeCount})
-                    </button>
-                    <button
-                      onClick={() => setActiveTab('harmful')}
-                      className={`py-2 px-1 ${
-                        activeTab === 'harmful'
-                          ? 'border-b-2 border-red-500 text-red-600'
-                          : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                      }`}
-                    >
-                      Harmful ({harmfulCount})
-                    </button>
-                  </nav>
-                </div>
-                
-                {/* Comments list */}
-                {filteredComments.length === 0 ? (
-                  <p className="text-gray-500 py-4">No {activeTab === 'safe' ? 'safe' : activeTab === 'harmful' ? 'harmful' : ''} comments found.</p>
-                ) : (
-                  <ul className="space-y-4">
-                    {filteredComments.map(comment => (
-                      <li key={comment.id} className="p-4 border border-gray-200 rounded">
-                        <div className="flex justify-between mb-2">
-                          <span className="font-medium">@{comment.username}</span>
-                          <span className="text-sm text-gray-500">{formatDate(comment.timestamp)}</span>
-                        </div>
-                        <p className="mb-2">{comment.text}</p>
-                        <div className="flex justify-between items-center text-xs">
-                          <span className="text-gray-500">Media ID: {comment.mediaId || 'Unknown'}</span>
-                          <div className="flex items-center gap-2">
-                            <span className={`${comment.hidden ? 'text-red-500' : 'text-green-500'}`}>
-                              {comment.hidden ? 'Hidden' : 'Visible'}
-                            </span>
-                            
-                            {comment.isHarmful !== undefined && (
-                              <span className={`px-2 py-1 rounded ${comment.isHarmful ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}>
-                                {comment.isHarmful ? 'Harmful' : 'Safe'}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                )}
+              <div className="space-y-3">
+                {filteredComments.map(comment => (
+                  <CommentItem 
+                    key={comment.id}
+                    username={comment.username}
+                    text={comment.text}
+                    isHarmful={comment.isHarmful}
+                    hidden={comment.hidden}
+                  />
+                ))}
               </div>
             )}
-          </div>
+          </>
         )}
       </div>
     </div>
