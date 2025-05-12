@@ -33,6 +33,7 @@ model AnalyzedComment {
   text        String
   username    String
   isHarmful   Boolean
+  isHidden    Boolean  @default(false)  // Track if comment is hidden
   timestamp   DateTime @default(now())
   
   @@unique([userId, commentId])

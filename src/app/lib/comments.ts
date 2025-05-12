@@ -131,6 +131,7 @@ async function saveAnalyzedComment(userId: string, comment: Comment, isHarmful: 
       },
       update: {
         isHarmful,
+        isHidden: comment.hidden,
       },
       create: {
         userId,
@@ -139,6 +140,7 @@ async function saveAnalyzedComment(userId: string, comment: Comment, isHarmful: 
         text: comment.text,
         username: comment.username,
         isHarmful,
+        isHidden: comment.hidden || false,
       },
     });
   } catch (error) {
@@ -148,7 +150,7 @@ async function saveAnalyzedComment(userId: string, comment: Comment, isHarmful: 
 }
 
 // Get previously analyzed comments for a user
-async function getAnalyzedComments(userId: string): Promise<Record<string, boolean>> {
+async function getAnalyzedComments(userId: string): Promise<Record<string, { isHarmful: boolean; isHidden: boolean; }>> {
   try {
     const analyzedComments = await prisma.analyzedComment.findMany({
       where: {
@@ -157,14 +159,19 @@ async function getAnalyzedComments(userId: string): Promise<Record<string, boole
       select: {
         commentId: true,
         isHarmful: true,
+        isHidden: true,
       },
     });
     
-    // Create a map of comment IDs to their harmful status for quick lookup
-    return analyzedComments.reduce((acc: Record<string, boolean>, comment: { commentId: string; isHarmful: boolean }) => {
-      acc[comment.commentId] = comment.isHarmful;
+    // Create a map of comment IDs to their status for quick lookup
+    return analyzedComments.reduce((acc: Record<string, { isHarmful: boolean; isHidden: boolean; }>, 
+        comment: { commentId: string; isHarmful: boolean; isHidden: boolean; }) => {
+      acc[comment.commentId] = { 
+        isHarmful: comment.isHarmful,
+        isHidden: comment.isHidden
+      };
       return acc;
-    }, {} as Record<string, boolean>);
+    }, {} as Record<string, { isHarmful: boolean; isHidden: boolean; }>);
   } catch (error) {
     console.error('Error retrieving analyzed comments:', error);
     return {};
@@ -285,6 +292,26 @@ async function deleteComment(commentId: string, accessToken: string): Promise<bo
   }
 }
 
+// Update the hidden status of a comment in the database
+async function updateCommentHiddenStatus(userId: string, commentId: string, isHidden: boolean): Promise<void> {
+  try {
+    await prisma.analyzedComment.update({
+      where: {
+        userId_commentId: {
+          userId,
+          commentId,
+        },
+      },
+      data: {
+        isHidden,
+      },
+    });
+  } catch (error) {
+    console.error('Error updating comment hidden status:', error);
+    throw error;
+  }
+}
+
 // Export all functions and types
 export { 
   getInstagramBusinessAccountIds, 
@@ -295,5 +322,6 @@ export {
   hideComment,
   unhideComment,
   deleteComment,
+  updateCommentHiddenStatus,
   type Comment 
 };

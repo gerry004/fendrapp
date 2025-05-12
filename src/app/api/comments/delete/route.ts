@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { deleteComment } from '@/app/lib/comments';
+import { getSession } from '@/app/lib/session';
+import { prisma } from '@/app/prismaClient';
 
 export async function DELETE(request: NextRequest) {
   try {
@@ -14,8 +16,36 @@ export async function DELETE(request: NextRequest) {
       );
     }
     
+    // Get the user session to get the userId
+    const session = getSession(request);
+    if (!session || !session.userId) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+    
     try {
+      // First, delete the comment on Instagram
       const success = await deleteComment(commentId, accessToken);
+      
+      if (success) {
+        // If successful, delete the comment from our database (or mark as deleted if we want to keep records)
+        try {
+          await prisma.analyzedComment.delete({
+            where: {
+              userId_commentId: {
+                userId: session.userId,
+                commentId: commentId,
+              },
+            },
+          });
+        } catch (dbError) {
+          console.error('Error removing comment from database:', dbError);
+          // Continue even if database deletion fails
+        }
+      }
+      
       return NextResponse.json({ success });
     } catch (apiError: any) {
       console.error('Facebook API error deleting comment:', apiError);

@@ -4,6 +4,7 @@ import { prisma } from '@/app/prismaClient';
 import {
   getInstagramBusinessAccountIds,
   getAllComments,
+  getAnalyzedComments,
   type Comment
 } from '@/app/lib/comments';
 
@@ -40,13 +41,21 @@ export async function GET(request: NextRequest) {
         commentId: {
           in: instagramComments.map(c => c.id)
         }
+      },
+      select: {
+        commentId: true,
+        isHarmful: true,
+        isHidden: true
       }
     });
     
-    // Create a map of already analyzed comment IDs
+    // Create a map of already analyzed comment IDs with their status
     const analyzedCommentsMap = new Map();
     existingAnalyzedComments.forEach(comment => {
-      analyzedCommentsMap.set(comment.commentId, comment.isHarmful);
+      analyzedCommentsMap.set(comment.commentId, {
+        isHarmful: comment.isHarmful,
+        isHidden: comment.isHidden
+      });
     });
     
     // 4. Analyze comments that don't exist in the database
@@ -83,12 +92,16 @@ export async function GET(request: NextRequest) {
               mediaId: comment.mediaId,
               text: comment.text,
               username: comment.username,
-              isHarmful
+              isHarmful,
+              isHidden: comment.hidden || false // Track initial hidden status
             }
           });
           
           // Add to map for returning in response
-          analyzedCommentsMap.set(comment.id, isHarmful);
+          analyzedCommentsMap.set(comment.id, {
+            isHarmful,
+            isHidden: comment.hidden || false
+          });
           
         } catch (error) {
           console.error(`Error processing comment ${comment.id}:`, error);
@@ -97,10 +110,16 @@ export async function GET(request: NextRequest) {
     }
     
     // 5. Combine all data for response
-    const enhancedComments = instagramComments.map(comment => ({
-      ...comment,
-      isHarmful: analyzedCommentsMap.has(comment.id) ? analyzedCommentsMap.get(comment.id) : undefined
-    }));
+    const enhancedComments = instagramComments.map(comment => {
+      const storedData = analyzedCommentsMap.get(comment.id);
+      return {
+        ...comment,
+        isHarmful: storedData ? storedData.isHarmful : undefined,
+        // Override the hidden status from the API with our database record
+        // This ensures we show our tracked status which may have changed
+        hidden: storedData ? storedData.isHidden : comment.hidden
+      };
+    });
     
     return NextResponse.json({
       comments: enhancedComments,
